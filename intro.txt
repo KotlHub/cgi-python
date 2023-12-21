@@ -1,0 +1,65 @@
+CGI - Common Gateway Interface - Інтерфейс спільного шлюзу
+Протокол, за яким веб-сервер, як програма яка розбирає HTTP запит,
+ передає результат розбору іншій програмі (скрипту), одержує
+ результат його роботи та формує з нього відповідь
+
+ HTTP Request <---> :80 <------> WebServer (Apache) <------> Python
+
+ Альтернатива - власний сервер або комплекс ПЗ із засобами обробки HTTP-запитів
+
+ Переваги-недоліки:
+ CGI - високоефективний сервер, можна підібрати сертифікований
+  але це окремий продукт, що потребує встановлення.
+Власний сервер/модуль - цілісність ПЗ, але частіше за все,
+ є питання із сертифікацією, а також гірші показники за часом роботи
+
+ Налаштування:
+ Apache
+ - встановити: або як самостійне ПЗ, або у збірці (XAMPP, Danver, OpenServer)
+ - налаштовуємо локальний (віртуальний) хостинг
+  = відкриваємо папку з налаштуваннями Apache (/xampp/apache/conf)
+  = редагуємо файл /extra/httpd-vhosts.conf
+  <VirtualHost *:80>
+    ServerAdmin : webmaster@localhost
+    DocumentRoot "D:/path-to-project/PythonLinchevsky/cgi"
+    ServerName linchevsky.localhost
+    ErrorLog "D:/path-to-project/PythonLinchevsky/cgi/error.log"
+    CustomLog "D:/path-to-project/PythonLinchevsky/cgi/access.log" common
+    <Directory "D:/path-to-project/PythonLinchevsky/cgi">
+        AllowOverride All
+        Options -Indexes +ExecCGI
+        AddHandler cgi-script .py
+        Require all granted
+    </Directory>
+  </VirtualHost>
+  = Зберігаємо файл - перезапускаємо Apache. У разі успіху у папці
+    З проектом створюються файли error.log та access.log
+
+Local DNS
+ - редагуємо файл (у режимі адміністратора)
+    C:\Windows\System32\Drivers\etc\hosts
+ - у кінець файлу дописуємо 
+    127.0.0.1 py-linchevsky.loc
+    127.0.0.1 py-www.linchevsky.loc
+ - тестуємо
+  = у папці проєкту (.../cgi/) створюємо файл index.html
+    з тестовим вмістом
+  = у браузері набираємо http://py-linchevsky.loc
+    повинен відкритись index.html, а у файл access.log додається
+    повідомлення про запит сайту
+
+CGI-script (Python)
+ - створюємо скрипт index.py
+ - першим рядком вказуємо розміщення інтерпритатора
+     #! "C:\Python311\python.exe"
+ - у режимі CGI скрипт бере на себе повне формування відповіді
+    (response), починаючи із заголовків. Перший рядок (статус-рядок)
+    додає Apache, такой може додавати окремі заголовки
+    print("Content-Type: text/html")
+    print( "") # заголовки від тіла відокремлюються порожнім рядком
+    print("""<!doctype html>...
+ - у браузері випробовуємо - набираємо http://py-linchevsky.loc/index.py
+ - якщо все працює, то замінюємо головний стартовий файл (індекс) сайту набираємо
+   index.py - для цього додаємо інструкцію DirectoryIndex index.py
+   до означень <VirtualHost *:80>
+   після цього запит http://py-linchevsky.loc/ має переводити на Python скрипт
