@@ -1,12 +1,13 @@
 function publishClick() {
     fetch("/product", {
-        method:'PUT',
+        method: 'POST',
         headers: {
             'Authorization': `Bearer ${window.localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-            name:'Коробка 10х10х10',
-            price: 19.50
+            name: 'Коробка 10х10х10',
+            price: 19.50,
+            img_url: 'box2.jpg'
         })
     })
         .then(r => r.json())
@@ -23,7 +24,8 @@ function authClick() {
     })
         .then(r => r.json())
         .then(j => {
-            window.localStorage.setItem('token', j.token)
+            
+            window.localStorage.setItem('token', j.data.token)
         });
 }
 
@@ -41,3 +43,20 @@ function infoClick() {
             .then(console.log);
     }
 }
+angular
+    .module('app', [])
+    .directive('products', function () {
+        return {
+            restrict: 'E',
+            transclude: true,
+            scope: {},
+            controller: function ($scope, $http) {
+                $scope.products = [];
+                $http
+                .get('/product')
+                .then(r => $scope.products = r.data.data);
+            },
+            templateUrl:'/static/tpl/product.html',
+            replace: true
+        };
+    })

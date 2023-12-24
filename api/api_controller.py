@@ -1,5 +1,3 @@
-#!C:/Users/Admin/AppData/Local/Programs/Python/Python312/python.exe
-
 import json
 import mysql.connector
 import os
@@ -11,15 +9,23 @@ import db_ini
 class ApiController:
     
 
-    def send_response(self, status_code:int=200,reason_phrase:str='OK',body:object=None)->None:
+    def send_response(self, 
+                      status_code:int=200,
+                      reason_phrase:str='OK',
+                    #   body:object=None,
+                      meta:object=None,
+                      data:object=None
+                      )->None:
         status_header = f"Status: {status_code}"
         if reason_phrase:
             status_header+=f" {reason_phrase}"
         print(status_header)
         print("Content-Type: text/html")
         print("")
-        if body:
-            print (json.dumps(body),end="")
+        # if body:
+        #     print (json.dumps(body),end="")
+        # else:
+        print (json.dumps({"meta":meta, "data":data}),end="")
         exit()
     
 
@@ -27,7 +33,9 @@ class ApiController:
         try:
             return mysql.connector.connect(**db_ini.connection_params)
         except mysql.connector.Error as err:
-            self.send_response(503,"Service Unavaliable",repr(err))
+            self.send_response(500,"Internal Error",
+                           meta={"service":"api_controller","status":500, "count":0},
+                           data={"message":"Server error, see logs for details"})
 
 
     def get_auth_header_or_exit(self,auth_scheme:str='Basic '):
@@ -35,21 +43,21 @@ class ApiController:
         if not auth_scheme.endswith(' '):
             auth_scheme+=' '
         if not auth_header_name in os.environ:
-            self.send_response(401,'Unauthorized',
-                          {'message':"Missing 'Authorization' header"})
+            self.send_response(401,'Unauthorized',meta={"service":"api_controller","status":401,"scheme":"Basic"},
+                          data={'message':"Missing 'Authorization' header"})
         auth_header_value = os.environ[auth_header_name]
     
         if not auth_header_value.startswith(auth_scheme):
-            self.send_response(401,'Unauthorized',
-                          {'message':f"Invalid Authorization scheme: {auth_scheme} only"})
+            self.send_response(401,'Unauthorized',meta={"service":"api_controller","status":401,"scheme":"Basic"},
+                          data={'message':f"Invalid Authorization scheme: {auth_scheme} only"})
         return auth_header_value[len(auth_scheme):] # Вилучаємо зі строки 'auth_scheme ' 
     
 
     def get_bearer_token_or_exit(self):
         auth_token = self.get_auth_header_or_exit('Bearer')
         if not re.match("^[0-9a-f-]+$", auth_token):
-            self.send_response(401,'Unauthorized',
-                          {'message':"Invalid Authorization token: hexdecimal form expected"})
+            self.send_response(401,'Unauthorized',meta={"service":"api_controller","status":401,"scheme":"Bearer"},
+                          data={'message':"Invalid Authorization token: hexdecimal form expected"})
         return auth_token
 
 
