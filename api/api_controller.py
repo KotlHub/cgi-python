@@ -6,6 +6,10 @@ import sys
 sys.path.append('../') # додати папку пошуку модулів
 import db_ini
 
+import logging
+logging.basicConfig(filename="log.txt", level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S", format="%(asctime)s %(levelname)s [%(name)s@%(filename)s::%(lineno)d] %(message)s %(args)s")
+
+
 class ApiController:
     
 

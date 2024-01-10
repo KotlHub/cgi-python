@@ -59,4 +59,28 @@ angular
             templateUrl:'/static/tpl/product.html',
             replace: true
         };
-    })
+    });
+
+function addCartClick(e) {
+
+  const productId = e.target.closest('[data-product-id]').getAttribute('data-product-id');
+
+  const userToken = '100628681835151362';  // взяти з DOM
+
+  fetch('/cart', {
+
+    method: 'POST',
+
+    headers:{
+
+      'Content-Type': 'application/json',
+
+      'Authorization': `Bearer ${userToken}`,
+
+    },
+
+    body: JSON.stringify( { productId } )
+
+  }).then( r => r.text() ).then( console.log ) ;
+
+}

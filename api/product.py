@@ -3,18 +3,16 @@
 import api_controller
 import json
 import sys
+sys.path.append('../') # додати папку пошуку модулів
+import log
+import dao
+import db_ini
 
 class ProductController(api_controller.ApiController):
     
   def do_get(self):
-    db = self.get_db_or_exit()
-    sql = "SELECT * FROM products"
-    res = []
     try:
-       with db.cursor() as cursor:
-          cursor.execute(sql)
-          for row in cursor:
-             res.append(dict(zip(cursor.column_names,map(str,row))))
+       res = dao.Products().get_all()
     except:
         self.send_response(500,"Internal Error",
                            meta={"service":"product","count":0,"status":500},
@@ -42,7 +40,7 @@ class ProductController(api_controller.ApiController):
        with db.cursor() as cursor:
            cursor.execute(sql,body_data)
            db.commit()
-    except :
+    except  :
        self.send_response(500,"Internal Error",
                            meta={"service":"product","count":0,"status":500},
                            data={"message":"Server error, see logs for details"})
